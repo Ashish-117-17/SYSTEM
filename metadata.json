@@ -1,0 +1,6 @@
+{
+  "name": "Prism",
+  "description": "Apple Liquid Glass unified Android suite combining YouTube, Music with synced lyrics, and Apple Notes behind a Profile Dropdown app switcher.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

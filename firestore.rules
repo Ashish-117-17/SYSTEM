@@ -1,0 +1,220 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: deny all reads and writes by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidFolder(data) {
+      return data.name is string && data.name.size() >= 1 && data.name.size() <= 60 &&
+             data.iconKey is string && data.iconKey.size() >= 1 && data.iconKey.size() <= 30 &&
+             data.systemFolder is bool &&
+             data.sortOrder is int && data.sortOrder >= 0 && data.sortOrder <= 1000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidNote(data) {
+      return data.folderId is string && data.folderId.size() >= 1 && data.folderId.size() <= 128 &&
+             data.title is string && data.title.size() <= 200 &&
+             data.body is string && data.body.size() <= 50000 &&
+             data.snippet is string && data.snippet.size() <= 240 &&
+             data.tags is list && data.tags.size() <= 20 && (data.tags.size() == 0 || data.tags[0] is string) &&
+             data.checklists is list && data.checklists.size() <= 100 && (data.checklists.size() == 0 || data.checklists[0] is map) &&
+             data.highlights is list && data.highlights.size() <= 50 && (data.highlights.size() == 0 || data.highlights[0] is map) &&
+             data.attachments is list && data.attachments.size() <= 30 && (data.attachments.size() == 0 || data.attachments[0] is map) &&
+             data.pinned is bool &&
+             data.locked is bool &&
+             data.deleted is bool &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidPlaylist(data) {
+      return data.name is string && data.name.size() >= 1 && data.name.size() <= 80 &&
+             data.coverStyle is int && data.coverStyle >= 0 && data.coverStyle <= 10 &&
+             data.tracks is list && data.tracks.size() <= 200 && (data.tracks.size() == 0 || data.tracks[0] is map) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidMusicFavorite(data) {
+      return data.videoId is string && data.videoId.size() >= 1 && data.videoId.size() <= 64 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+             data.artist is string && data.artist.size() >= 1 && data.artist.size() <= 160 &&
+             data.thumbnailUrl is string && data.thumbnailUrl.size() <= 500 &&
+             data.durationSec is int && data.durationSec >= 0 && data.durationSec <= 86400 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidListeningHistory(data) {
+      return data.videoId is string && data.videoId.size() >= 1 && data.videoId.size() <= 64 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+             data.artist is string && data.artist.size() >= 1 && data.artist.size() <= 160 &&
+             data.album is string && data.album.size() <= 160 &&
+             data.thumbnailUrl is string && data.thumbnailUrl.size() <= 500 &&
+             data.durationSec is int && data.durationSec >= 0 && data.durationSec <= 86400 &&
+             data.listenedSec is int && data.listenedSec >= 0 && data.listenedSec <= 86400 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidYtSubscription(data) {
+      return data.channelUrl is string && data.channelUrl.size() >= 1 && data.channelUrl.size() <= 300 &&
+             data.channelName is string && data.channelName.size() >= 1 && data.channelName.size() <= 160 &&
+             data.avatarUrl is string && data.avatarUrl.size() <= 500 &&
+             data.subscriberText is string && data.subscriberText.size() <= 80 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidYtSavedVideo(data) {
+      return data.videoUrl is string && data.videoUrl.size() >= 1 && data.videoUrl.size() <= 300 &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 240 &&
+             data.uploaderName is string && data.uploaderName.size() >= 1 && data.uploaderName.size() <= 160 &&
+             data.thumbnailUrl is string && data.thumbnailUrl.size() <= 500 &&
+             data.durationSec is int && data.durationSec >= 0 && data.durationSec <= 86400 &&
+             data.liked is bool &&
+             data.saved is bool &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId} {
+      match /folders/{folderId} {
+        allow list: if isOwner(userId);
+        allow get, delete: if isOwner(userId) && isValidId(folderId);
+        allow create: if isOwner(userId) &&
+                         isValidId(folderId) &&
+                         incoming().keys().hasAll(['name', 'iconKey', 'systemFolder', 'sortOrder', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['name', 'iconKey', 'systemFolder', 'sortOrder', 'createdAt', 'updatedAt']) &&
+                         isValidFolder(incoming());
+        allow update: if isSignedIn() &&
+                         isValidFolder(incoming()) &&
+                         isOwner(userId) &&
+                         isValidId(folderId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'iconKey', 'sortOrder', 'updatedAt']);
+      }
+
+      match /notes/{noteId} {
+        allow list: if isOwner(userId);
+        allow get, delete: if isOwner(userId) && isValidId(noteId);
+        allow create: if isOwner(userId) &&
+                         isValidId(noteId) &&
+                         incoming().keys().hasAll(['folderId', 'title', 'body', 'snippet', 'tags', 'checklists', 'highlights', 'attachments', 'pinned', 'locked', 'deleted', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['folderId', 'title', 'body', 'snippet', 'tags', 'checklists', 'highlights', 'attachments', 'pinned', 'locked', 'deleted', 'createdAt', 'updatedAt']) &&
+                         isValidNote(incoming());
+        allow update: if isSignedIn() &&
+                         isValidNote(incoming()) &&
+                         isOwner(userId) &&
+                         isValidId(noteId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['folderId', 'title', 'body', 'snippet', 'tags', 'checklists', 'highlights', 'attachments', 'pinned', 'locked', 'deleted', 'updatedAt']);
+      }
+
+      match /playlists/{playlistId} {
+        allow list: if isOwner(userId);
+        allow get, delete: if isOwner(userId) && isValidId(playlistId);
+        allow create: if isOwner(userId) &&
+                         isValidId(playlistId) &&
+                         incoming().keys().hasAll(['name', 'coverStyle', 'tracks', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['name', 'coverStyle', 'tracks', 'createdAt', 'updatedAt']) &&
+                         isValidPlaylist(incoming());
+        allow update: if isSignedIn() &&
+                         isValidPlaylist(incoming()) &&
+                         isOwner(userId) &&
+                         isValidId(playlistId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'coverStyle', 'tracks', 'updatedAt']);
+      }
+
+      match /musicFavorites/{trackId} {
+        allow list: if isOwner(userId);
+        allow get, delete: if isOwner(userId) && isValidId(trackId);
+        allow create: if isOwner(userId) &&
+                         isValidId(trackId) &&
+                         incoming().keys().hasAll(['videoId', 'title', 'artist', 'thumbnailUrl', 'durationSec', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['videoId', 'title', 'artist', 'thumbnailUrl', 'durationSec', 'createdAt', 'updatedAt']) &&
+                         isValidMusicFavorite(incoming());
+        allow update: if isSignedIn() &&
+                         isValidMusicFavorite(incoming()) &&
+                         isOwner(userId) &&
+                         isValidId(trackId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'artist', 'thumbnailUrl', 'durationSec', 'updatedAt']);
+      }
+
+      match /listeningHistory/{entryId} {
+        allow list: if isOwner(userId);
+        allow get, delete: if isOwner(userId) && isValidId(entryId);
+        allow create: if isOwner(userId) &&
+                         isValidId(entryId) &&
+                         incoming().keys().hasAll(['videoId', 'title', 'artist', 'album', 'thumbnailUrl', 'durationSec', 'listenedSec', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['videoId', 'title', 'artist', 'album', 'thumbnailUrl', 'durationSec', 'listenedSec', 'createdAt', 'updatedAt']) &&
+                         isValidListeningHistory(incoming());
+        allow update: if isSignedIn() &&
+                         isValidListeningHistory(incoming()) &&
+                         isOwner(userId) &&
+                         isValidId(entryId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['listenedSec', 'updatedAt']);
+      }
+
+      match /ytSubscriptions/{channelId} {
+        allow list: if isOwner(userId);
+        allow get, delete: if isOwner(userId) && isValidId(channelId);
+        allow create: if isOwner(userId) &&
+                         isValidId(channelId) &&
+                         incoming().keys().hasAll(['channelUrl', 'channelName', 'avatarUrl', 'subscriberText', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['channelUrl', 'channelName', 'avatarUrl', 'subscriberText', 'createdAt', 'updatedAt']) &&
+                         isValidYtSubscription(incoming());
+        allow update: if isSignedIn() &&
+                         isValidYtSubscription(incoming()) &&
+                         isOwner(userId) &&
+                         isValidId(channelId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['channelName', 'avatarUrl', 'subscriberText', 'updatedAt']);
+      }
+
+      match /ytSavedVideos/{videoId} {
+        allow list: if isOwner(userId);
+        allow get, delete: if isOwner(userId) && isValidId(videoId);
+        allow create: if isOwner(userId) &&
+                         isValidId(videoId) &&
+                         incoming().keys().hasAll(['videoUrl', 'title', 'uploaderName', 'thumbnailUrl', 'durationSec', 'liked', 'saved', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['videoUrl', 'title', 'uploaderName', 'thumbnailUrl', 'durationSec', 'liked', 'saved', 'createdAt', 'updatedAt']) &&
+                         isValidYtSavedVideo(incoming());
+        allow update: if isSignedIn() &&
+                         isValidYtSavedVideo(incoming()) &&
+                         isOwner(userId) &&
+                         isValidId(videoId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'uploaderName', 'thumbnailUrl', 'durationSec', 'liked', 'saved', 'updatedAt']);
+      }
+    }
+  }
+}

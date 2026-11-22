@@ -1,0 +1,145 @@
+{
+  "entities": {
+    "NoteFolder": {
+      "title": "NoteFolder",
+      "description": "User-scoped folder organizing notes inside the Notes mini-app.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Folder display name (1..60 chars)" },
+        "iconKey": { "type": "string", "description": "Icon identifier (folder, gear, trash, star, book)" },
+        "systemFolder": { "type": "boolean", "description": "Whether this is a default system folder" },
+        "sortOrder": { "type": "integer", "description": "Ordering weight in the folders list" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp set via FieldValue.serverTimestamp()" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp set via FieldValue.serverTimestamp()" }
+      },
+      "required": ["name", "iconKey", "systemFolder", "sortOrder", "createdAt", "updatedAt"]
+    },
+    "NoteDocument": {
+      "title": "NoteDocument",
+      "description": "Rich Apple Notes-style student note with tags, checklists, highlights, attachments, and lock state.",
+      "type": "object",
+      "properties": {
+        "folderId": { "type": "string", "description": "Parent folder identifier" },
+        "title": { "type": "string", "description": "Note heading title (0..200 chars)" },
+        "body": { "type": "string", "description": "Note rich text body (0..50000 chars)" },
+        "snippet": { "type": "string", "description": "Short preview line (0..240 chars)" },
+        "tags": { "type": "array", "description": "Bounded list of hashtag labels (max 20)" },
+        "checklists": { "type": "array", "description": "Bounded list of checklist item maps (max 100)" },
+        "highlights": { "type": "array", "description": "Bounded list of text highlight swatch maps (max 50)" },
+        "attachments": { "type": "array", "description": "Bounded list of local attachment descriptor maps (max 30)" },
+        "pinned": { "type": "boolean", "description": "Pinned to top of list" },
+        "locked": { "type": "boolean", "description": "Protected behind note lock screen" },
+        "deleted": { "type": "boolean", "description": "Soft-deleted into Recently Deleted" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": ["folderId", "title", "body", "snippet", "tags", "checklists", "highlights", "attachments", "pinned", "locked", "deleted", "createdAt", "updatedAt"]
+    },
+    "MusicPlaylist": {
+      "title": "MusicPlaylist",
+      "description": "User playlist in the Music mini-app with generative artwork style and tracks.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Playlist title (1..80 chars)" },
+        "coverStyle": { "type": "integer", "description": "Generative cover gradient preset index (0..10)" },
+        "tracks": { "type": "array", "description": "Bounded list of track metadata maps (max 200)" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": ["name", "coverStyle", "tracks", "createdAt", "updatedAt"]
+    },
+    "MusicFavorite": {
+      "title": "MusicFavorite",
+      "description": "Favorited song stored in the user's Music library.",
+      "type": "object",
+      "properties": {
+        "videoId": { "type": "string", "description": "YouTube/Music track ID" },
+        "title": { "type": "string", "description": "Track title" },
+        "artist": { "type": "string", "description": "Artist name" },
+        "thumbnailUrl": { "type": "string", "description": "Artwork URL" },
+        "durationSec": { "type": "integer", "description": "Duration in seconds" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": ["videoId", "title", "artist", "thumbnailUrl", "durationSec", "createdAt", "updatedAt"]
+    },
+    "ListeningHistoryEntry": {
+      "title": "ListeningHistoryEntry",
+      "description": "Tracked listening session entry powering Recently Played and Replay stats.",
+      "type": "object",
+      "properties": {
+        "videoId": { "type": "string", "description": "Track ID" },
+        "title": { "type": "string", "description": "Track title" },
+        "artist": { "type": "string", "description": "Artist name" },
+        "album": { "type": "string", "description": "Album or single label" },
+        "thumbnailUrl": { "type": "string", "description": "Artwork URL" },
+        "durationSec": { "type": "integer", "description": "Track duration in seconds" },
+        "listenedSec": { "type": "integer", "description": "Seconds listened" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": ["videoId", "title", "artist", "album", "thumbnailUrl", "durationSec", "listenedSec", "createdAt", "updatedAt"]
+    },
+    "YouTubeSubscription": {
+      "title": "YouTubeSubscription",
+      "description": "Subscribed YouTube channel stored in the user's profile.",
+      "type": "object",
+      "properties": {
+        "channelUrl": { "type": "string", "description": "Channel canonical URL" },
+        "channelName": { "type": "string", "description": "Channel display name" },
+        "avatarUrl": { "type": "string", "description": "Channel avatar URL" },
+        "subscriberText": { "type": "string", "description": "Subscriber count text" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": ["channelUrl", "channelName", "avatarUrl", "subscriberText", "createdAt", "updatedAt"]
+    },
+    "YouTubeSavedVideo": {
+      "title": "YouTubeSavedVideo",
+      "description": "Saved or liked YouTube video bookmark in the user's library.",
+      "type": "object",
+      "properties": {
+        "videoUrl": { "type": "string", "description": "YouTube watch URL" },
+        "title": { "type": "string", "description": "Video title" },
+        "uploaderName": { "type": "string", "description": "Channel uploader name" },
+        "thumbnailUrl": { "type": "string", "description": "Video thumbnail URL" },
+        "durationSec": { "type": "integer", "description": "Duration in seconds" },
+        "liked": { "type": "boolean", "description": "Whether user liked the video" },
+        "saved": { "type": "boolean", "description": "Whether user bookmarked the video" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp" }
+      },
+      "required": ["videoUrl", "title", "uploaderName", "thumbnailUrl", "durationSec", "liked", "saved", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/folders/{folderId}": {
+      "schema": { "$ref": "#/entities/NoteFolder" },
+      "description": "User's private note folders"
+    },
+    "/users/{userId}/notes/{noteId}": {
+      "schema": { "$ref": "#/entities/NoteDocument" },
+      "description": "User's private rich notes"
+    },
+    "/users/{userId}/playlists/{playlistId}": {
+      "schema": { "$ref": "#/entities/MusicPlaylist" },
+      "description": "User's Music playlists"
+    },
+    "/users/{userId}/musicFavorites/{trackId}": {
+      "schema": { "$ref": "#/entities/MusicFavorite" },
+      "description": "User's favorite songs"
+    },
+    "/users/{userId}/listeningHistory/{entryId}": {
+      "schema": { "$ref": "#/entities/ListeningHistoryEntry" },
+      "description": "User's listening history for Replay stats"
+    },
+    "/users/{userId}/ytSubscriptions/{channelId}": {
+      "schema": { "$ref": "#/entities/YouTubeSubscription" },
+      "description": "User's YouTube channel subscriptions"
+    },
+    "/users/{userId}/ytSavedVideos/{videoId}": {
+      "schema": { "$ref": "#/entities/YouTubeSavedVideo" },
+      "description": "User's saved and liked YouTube videos"
+    }
+  }
+}
